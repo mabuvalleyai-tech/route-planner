@@ -1,14 +1,17 @@
 {
   "name": "route-planner",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "台灣山徑路線規劃：自然語言輸入 + RAG",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-rag-index.mjs",
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
   }
 }

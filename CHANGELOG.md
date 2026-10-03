@@ -2,6 +2,16 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採 [語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [0.4.0] - 2026-10-03
+### 新增
+- `api/plan.js`（Vercel Function）：`POST /api/plan {text, comp?}`，BM25 檢索 → Claude 結構化輸出（JSON schema）→ 伺服器端驗證。
+  - 預設模型 `claude-opus-5-5`，可用環境變數 `CLAUDE_MODEL` 切換；`effort: low` 降低延遲。
+  - 啟用 `fallbacks: "default"`：模型因安全分類拒答時自動改由備援模型處理。
+  - 每 IP 每分鐘 10 次的簡易速率限制、輸入上限 500 字。
+- `lib/plan.js`：只接受本次檢索出的節點 ID、去除重複、擋下跨區域路線並改為請使用者釐清。
+- `lib/prompt.js`：系統提示（固定、可快取）與輸出 schema。
+- `vercel.json`、`.gitignore`；`npm test`（node:test，12 個測試，以假 Claude client 測端到端）。
+
 ## [0.3.0] - 2026-10-03
 ### 新增
 - RAG 知識庫：
