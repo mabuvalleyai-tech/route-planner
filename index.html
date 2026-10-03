@@ -510,6 +510,78 @@
                 background: #34404A;
             }
 
+            /* ---------- 自然語言規劃面板 ---------- */
+            .nl-sec {
+                background: var(--panel-2);
+            }
+            .nl-input {
+                width: 100%;
+                resize: vertical;
+                min-height: 72px;
+                font: inherit;
+                line-height: 1.5;
+            }
+            .nl-chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin: 8px 0 10px;
+            }
+            .nl-chip {
+                font: inherit;
+                font-size: 12px;
+                color: var(--muted);
+                background: var(--panel-3);
+                border: 1px solid var(--line);
+                border-radius: 999px;
+                padding: 4px 10px;
+                cursor: pointer;
+            }
+            .nl-chip:hover {
+                color: var(--ink);
+                border-color: var(--line-strong);
+            }
+            .nl-result {
+                margin-top: 12px;
+                padding: 10px 12px;
+                border-left: 3px solid var(--accent);
+                background: var(--panel-3);
+                border-radius: 4px;
+            }
+            .nl-answer {
+                margin: 0;
+                font-size: 13px;
+                line-height: 1.65;
+                white-space: pre-line;
+            }
+            .nl-cands {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .nl-cands:not(:empty) {
+                margin-top: 8px;
+            }
+            .nl-sources {
+                margin: 8px 0 0;
+                padding: 0;
+                list-style: none;
+                font-size: 12px;
+                color: var(--muted);
+            }
+            .nl-sources a {
+                color: var(--muted);
+            }
+            .nl-or {
+                margin: 10px 0 0;
+                font-size: 12px;
+                color: var(--faint);
+                text-align: center;
+            }
+            .ver {
+                color: var(--faint);
+            }
+
             .err {
                 font-size: 13px;
                 color: var(--danger);
@@ -1445,6 +1517,29 @@
                 </div>
             </header>
             <aside class="side">
+                <section class="sec nl-sec" id="nlSec">
+                    <div class="sec-head">
+                        <h2>用一句話規劃</h2>
+                        <span class="note">AI 會幫你選點、計算與分天</span>
+                    </div>
+                    <form id="nlForm" autocomplete="off">
+                        <textarea class="search nl-input" id="nlInput" rows="3" maxlength="500" placeholder="例如：從塔塔加上玉山主峰，住排雲山莊兩天一夜"></textarea>
+                        <div class="nl-chips" id="nlChips">
+                            <button type="button" class="nl-chip">塔塔加上玉山主峰，住排雲兩天一夜</button>
+                            <button type="button" class="nl-chip">雪山主東峰三天兩夜</button>
+                            <button type="button" class="nl-chip">合歡山東峰單攻，新手</button>
+                            <button type="button" class="nl-chip">第一次爬百岳要帶什麼？</button>
+                        </div>
+                        <button class="btn-main" id="nlSubmit" type="submit">規劃</button>
+                    </form>
+                    <div class="nl-result" id="nlResult" hidden>
+                        <p class="nl-answer" id="nlAnswer"></p>
+                        <div class="nl-cands" id="nlCands"></div>
+                        <ul class="nl-sources" id="nlSources"></ul>
+                    </div>
+                    <p class="err" id="nlErr"></p>
+                    <p class="nl-or">或在下方手動選擇起點與通過點</p>
+                </section>
                 <section class="sec">
                     <div class="sec-head">
                         <h2>起點</h2>
@@ -1562,6 +1657,7 @@
                     <p>作者：國立臺北科技大學防災工程科技中心（吳峻毅、張哲豪、黃光翊、吳威融、莊月美）</p>
                     <p>路網：QGIS 路網與已計算高程點，僅公開座標、高程與路線結果，不含 DEM 原始檔。</p>
                     <p>範圍圖資：林業及自然保育署、OpenStreetMap。</p>
+                    <p>原站：<a href="https://github.com/kuang-yi-1123/route-planner" target="_blank" rel="noopener">kuang-yi-1123/route-planner</a>（經原作者授權）。自然語言規劃與 RAG 由 Claude 提供。<span class="ver" id="appVersion">v1.0.0</span></p>
                 </footer>
             </aside>
             <main class="main">
@@ -4331,7 +4427,8 @@
 
                                         var token = ++calcToken;
                                         setCalcBusy(true);
-                                        loadProfiles(comp).then(function() {
+                                        // 回傳 promise，讓自然語言規劃（RoutePlanner.applyPlan）可以在算完後接著分天
+                                        return loadProfiles(comp).then(function() {
                                             if (token !== calcToken)
                                                 return;
                                             // 載入期間又按了一次（或清掉了），以新的那次為準
@@ -4560,6 +4657,69 @@
                                     if (overviewClearBtn)
                                         overviewClearBtn.addEventListener('click', setRouteButtons);
 
+                                    // ---------- 對外介面：自然語言規劃（assets/nl.js）用 ----------
+                                    // plan = {start, vias[], mode, overnight[]}，ID 已由 /api/plan 驗證過且同一區域。
+                                    // 做法同 restoreHistory：切區 → 設起點 → 依序勾通過點 → 計算；算完再依 overnight 勾分天點。
+                                    function applyPlan(plan) {
+                                        if (!plan || !NODES[plan.start])
+                                            return Promise.reject(new Error('沒有起點'));
+                                        var comp = NODES[plan.start].comp;
+                                        clearRoute();
+                                        if (comp !== ACTIVE_COMP) {
+                                            initOverviewMap();
+                                            switchActiveComp(comp);
+                                        }
+                                        viaBox.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
+                                            cb.checked = false;
+                                        });
+                                        VIA_ORDER = [];
+                                        syncViaOrder();
+                                        startSel.value = plan.start;
+                                        startSel.dispatchEvent(new Event('change',{
+                                            bubbles: true
+                                        }));
+                                        (plan.vias || []).forEach(function(id) {
+                                            var cb = viaCheckbox(id);
+                                            if (cb && !cb.checked) {
+                                                cb.checked = true;
+                                                cb.dispatchEvent(new Event('change',{
+                                                    bubbles: true
+                                                }));
+                                            }
+                                        });
+                                        if (plan.mode === 'dist' || plan.mode === 'time')
+                                            ROUTE_MODE = plan.mode;
+                                        updateOverviewSelection();
+                                        var pending = runCalc();
+                                        if (!pending)
+                                            return Promise.reject(new Error(document.getElementById('errBox').textContent || '無法計算路線'));
+                                        return pending.then(function() {
+                                            showRouteSet(ROUTE_MODE);
+                                            var nights = (plan.overnight || []).slice();
+                                            if (!nights.length || !dayRoute)
+                                                return;
+                                            openDayPicker();
+                                            // 依序對到路線上的 waypoint：同一個山屋可能經過兩次，取順序上下一個符合的
+                                            dayStopBox.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
+                                                if (nights.length && dayRoute.waypoints[Number(cb.value)].id === nights[0]) {
+                                                    cb.checked = true;
+                                                    nights.shift();
+                                                }
+                                            });
+                                            refreshDayList();
+                                        });
+                                    }
+                                    window.RoutePlanner = {
+                                        applyPlan: applyPlan,
+                                        activeComp: function() {
+                                            return ACTIVE_COMP;
+                                        },
+                                        nodeName: function(id) {
+                                            return NODES[id] ? NODES[id].name : id;
+                                        }
+                                    };
+                                    document.dispatchEvent(new Event('routeplanner:ready'));
+
                                 }
     fetch('data/trail-network.json').then(function(res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -4570,5 +4730,6 @@
         throw err;
     });
 </script>
+<script src="assets/nl.js" defer></script>
 </body>
                     </html>

@@ -2,6 +2,14 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採 [語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [1.0.0] - 2026-10-03
+### 新增
+- 側欄頂端「用一句話規劃」面板（`assets/nl.js`）：輸入框、範例句、AI 回答與引用來源；需要釐清時列出候選地點，點選後帶著原句重新規劃。Enter 送出、Shift+Enter 換行（輸入法選字不誤送）。
+- `window.RoutePlanner.applyPlan(plan)`：沿用原站「計算過的路線」的還原流程（切區 → 起點 → 依序勾通過點 → 計算），算完依 `overnight` 自動勾選分天點。
+- 頁尾標示原站來源與版本號；`README.md` 說明架構、開發與 Vercel 部署。
+### 變更
+- `runCalc()` 改為回傳 promise，計算完成後可接續分天。
+
 ## [0.4.0] - 2026-10-03
 ### 新增
 - `api/plan.js`（Vercel Function）：`POST /api/plan {text, comp?}`，BM25 檢索 → Claude 結構化輸出（JSON schema）→ 伺服器端驗證。
