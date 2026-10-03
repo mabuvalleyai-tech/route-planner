@@ -57,3 +57,11 @@ test('空白與過長輸入回 400，GET 回 405', async () => {
   });
   assert.equal(r, 405);
 });
+
+test('未設定 CLAUDE_MODEL 時預設用 claude-sonnet-5-5', async () => {
+  if (process.env.CLAUDE_MODEL) return;
+  const cap = {};
+  setClient(fakeClient({ intent: 'question', start: '', vias: [], mode: 'time', days: 1, overnight: [], candidates: [], answer: 'ok', citations: [] }, cap));
+  await call({ text: '高山症怎麼辦' });
+  assert.equal(cap.params.model, 'claude-sonnet-5-5');
+});

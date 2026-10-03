@@ -7,7 +7,7 @@ import { retrieveContext } from '../lib/retrieve.js';
 import { SYSTEM_PROMPT, PLAN_SCHEMA, buildUserMessage } from '../lib/prompt.js';
 import { sanitizePlan } from '../lib/plan.js';
 
-const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
+const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-5-5';
 const MAX_TEXT = 500;
 const NET = JSON.parse(readFileSync(new URL('../data/trail-network.json', import.meta.url), 'utf8'));
 

@@ -43,7 +43,7 @@ npx vercel dev    # 本機起前端＋/api/plan，需要 ANTHROPIC_API_KEY
 
 1. 在 Vercel 匯入這個 repo（Framework Preset 選 Other，`vercel.json` 已設定好）。
 2. Settings → Environment Variables 加上 `ANTHROPIC_API_KEY`。
-3. 選用：`CLAUDE_MODEL` 換模型（預設 `claude-opus-5-5`）。
+3. 選用：`CLAUDE_MODEL` 換模型（預設 `claude-sonnet-5-5`；要更強可設 `claude-opus-5-5`）。
 
 只部署靜態檔（如 GitHub Pages）時，手動規劃照常可用，自然語言面板會提示需要後端。
 

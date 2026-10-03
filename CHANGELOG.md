@@ -2,6 +2,10 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採 [語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [1.1.0] - 2026-10-03
+### 變更
+- 預設模型由 `claude-opus-5-5` 改為 `claude-sonnet-5-5`（每次規劃成本約減半）；仍可用環境變數 `CLAUDE_MODEL` 切換。
+
 ## [1.0.0] - 2026-10-03
 ### 新增
 - 側欄頂端「用一句話規劃」面板（`assets/nl.js`）：輸入框、範例句、AI 回答與引用來源；需要釐清時列出候選地點，點選後帶著原句重新規劃。Enter 送出、Shift+Enter 換行（輸入法選字不誤送）。
