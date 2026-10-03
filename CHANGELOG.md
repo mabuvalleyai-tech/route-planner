@@ -2,6 +2,52 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採 [語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [1.1.1] - 2026-10-03
+### 修正
+- 「用一句話規劃」的錯誤訊息不會顯示：`.err` 預設 `display:none`，需加上 `show` class，原本只寫入文字，API 出錯時畫面毫無反應。
+### 新增
+- `GET /api/plan` 健康檢查：回傳 `{ok, model, keyConfigured}`，可直接用瀏覽器確認函式已部署、金鑰是否設定（不回傳金鑰）。
+- 未設定 `ANTHROPIC_API_KEY` 時回傳明確的設定指引。
+- 前端請求 60 秒逾時並提示；失敗時同時記錄到瀏覽器 console。
+
+## [1.1.0] - 2026-10-03
+### 變更
+- 預設模型由 `claude-opus-5-5` 改為 `claude-sonnet-5-5`（每次規劃成本約減半）；仍可用環境變數 `CLAUDE_MODEL` 切換。
+
+## [1.0.0] - 2026-10-03
+### 新增
+- 側欄頂端「用一句話規劃」面板（`assets/nl.js`）：輸入框、範例句、AI 回答與引用來源；需要釐清時列出候選地點，點選後帶著原句重新規劃。Enter 送出、Shift+Enter 換行（輸入法選字不誤送）。
+- `window.RoutePlanner.applyPlan(plan)`：沿用原站「計算過的路線」的還原流程（切區 → 起點 → 依序勾通過點 → 計算），算完依 `overnight` 自動勾選分天點。
+- 頁尾標示原站來源與版本號；`README.md` 說明架構、開發與 Vercel 部署。
+### 變更
+- `runCalc()` 改為回傳 promise，計算完成後可接續分天。
+
+## [0.4.0] - 2026-10-03
+### 新增
+- `api/plan.js`（Vercel Function）：`POST /api/plan {text, comp?}`，BM25 檢索 → Claude 結構化輸出（JSON schema）→ 伺服器端驗證。
+  - 預設模型 `claude-opus-5-5`，可用環境變數 `CLAUDE_MODEL` 切換；`effort: low` 降低延遲。
+  - 啟用 `fallbacks: "default"`：模型因安全分類拒答時自動改由備援模型處理。
+  - 每 IP 每分鐘 10 次的簡易速率限制、輸入上限 500 字。
+- `lib/plan.js`：只接受本次檢索出的節點 ID、去除重複、擋下跨區域路線並改為請使用者釐清。
+- `lib/prompt.js`：系統提示（固定、可快取）與輸出 schema。
+- `vercel.json`、`.gitignore`；`npm test`（node:test，12 個測試，以假 Claude client 測端到端）。
+
+## [0.3.0] - 2026-10-03
+### 新增
+- RAG 知識庫：
+  - `knowledge/aliases.json`：常用地名別名（排雲、369、塔塔加、北大武…）。
+  - `knowledge/itineraries/`：11 篇行程範本（玉山、雪山、奇萊、合歡、南湖、北大武、嘉明湖、天池山莊），時間依路網實算，建置時會檢查節點名稱存在且同一區域。
+  - 登山知識文章直接從 `posts/*.html` 擷取。
+- `scripts/build-rag-index.mjs`（`npm run build`）產生 `data/rag/index.json`：717 個 chunk（節點 667、區域 19、文章段落 20、行程 11）。
+- `lib/retrieve.js`：中文字元 bigram + BM25 檢索。
+
+## [0.2.0] - 2026-10-03
+### 變更
+- 路網資料（667 節點、783 路段、19 區塊）從 `index.html` 拆出為 `data/trail-network.json`，頁面由 4 MB 降至約 260 KB；前後端共用同一份資料。
+- 主程式由 IIFE 改為 `startPlanner(DATA)`，載入資料後才啟動，載入失敗時顯示錯誤。
+### 新增
+- `scripts/extract-trail-data.mjs`：同步原站新版時重跑即可。
+
 ## [0.1.0] - 2026-10-03
 ### 新增
 - 匯入原站 [kuang-yi-1123/route-planner](https://github.com/kuang-yi-1123/route-planner)（commit `8e9df69`，經原作者授權）：路線規劃頁、步道路網、高程剖面、國家公園／保護區範圍、登山知識文章。
