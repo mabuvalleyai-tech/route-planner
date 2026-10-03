@@ -30,6 +30,12 @@
         submit.textContent = busy ? '規劃中…' : SUBMIT_LABEL;
     }
 
+    // .err 預設 display:none，要加 show 才看得到（同原站 showError）
+    function showErr(msg) {
+        errEl.textContent = msg;
+        errEl.classList.toggle('show', !!msg);
+    }
+
     function el(tag, cls, text) {
         var n = document.createElement(tag);
         if (cls)
@@ -75,13 +81,18 @@
             return;
         lastText = text;
         input.value = text;
-        errEl.textContent = '';
+        showErr('');
         setBusy(true);
+        var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        var timer = ctrl && setTimeout(function() {
+            ctrl.abort();
+        }, 60000);
         ready.then(function(rp) {
             return fetch('api/plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text, comp: rp.activeComp() })
+                body: JSON.stringify({ text: text, comp: rp.activeComp() }),
+                signal: ctrl ? ctrl.signal : undefined
             }).then(function(res) {
                 return res.json().catch(function() {
                     return {};
@@ -98,8 +109,15 @@
                     return rp.applyPlan(data.plan);
             });
         }).catch(function(err) {
-            errEl.textContent = err.message || '規劃失敗，請稍後再試。';
+            if (err && err.name === 'AbortError')
+                showErr('等候 AI 回應超過 60 秒，請稍後再試。');
+            else
+                showErr((err && err.message) || '規劃失敗，請稍後再試。');
+            if (window.console)
+                console.error('[nl] 規劃失敗', err);
         }).then(function() {
+            if (timer)
+                clearTimeout(timer);
             setBusy(false);
         });
     }

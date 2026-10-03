@@ -28,6 +28,11 @@ export function setClient(c) {
 
 export async function planFromText(text, comp) {
   const ctx = retrieveContext(text, { comp: Number.isInteger(comp) ? comp : undefined });
+  if (!client && !process.env.ANTHROPIC_API_KEY) {
+    const err = new Error('伺服器尚未設定 ANTHROPIC_API_KEY（Vercel 專案 Settings → Environment Variables，Preview 與 Production 都要勾），設定後需重新部署。');
+    err.status = 500;
+    throw err;
+  }
   client ??= new Anthropic();
   const response = await client.beta.messages.create({
     model: MODEL,
@@ -65,8 +70,12 @@ export async function planFromText(text, comp) {
 }
 
 export default async function handler(req, res) {
+  // 健康檢查：瀏覽器直接打開 /api/plan 就能確認函式有部署、金鑰有沒有設定（不回傳金鑰本身）
+  if (req.method === 'GET') {
+    return res.status(200).json({ ok: true, model: MODEL, keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY) });
+  }
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: '只接受 POST' });
   }
   const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();

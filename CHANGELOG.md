@@ -2,6 +2,14 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採 [語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [1.1.1] - 2026-10-03
+### 修正
+- 「用一句話規劃」的錯誤訊息不會顯示：`.err` 預設 `display:none`，需加上 `show` class，原本只寫入文字，API 出錯時畫面毫無反應。
+### 新增
+- `GET /api/plan` 健康檢查：回傳 `{ok, model, keyConfigured}`，可直接用瀏覽器確認函式已部署、金鑰是否設定（不回傳金鑰）。
+- 未設定 `ANTHROPIC_API_KEY` 時回傳明確的設定指引。
+- 前端請求 60 秒逾時並提示；失敗時同時記錄到瀏覽器 console。
+
 ## [1.1.0] - 2026-10-03
 ### 變更
 - 預設模型由 `claude-opus-5-5` 改為 `claude-sonnet-5-5`（每次規劃成本約減半）；仍可用環境變數 `CLAUDE_MODEL` 切換。

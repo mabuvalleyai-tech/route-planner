@@ -47,15 +47,36 @@ test('自然語言 → 檢索上下文 → 驗證後的規劃', async () => {
   assert.equal(cap.params.tool_choice, undefined);
 });
 
-test('空白與過長輸入回 400，GET 回 405', async () => {
-  assert.equal((await call({ text: '  ' })).status, 400);
-  assert.equal((await call({ text: '山'.repeat(501) })).status, 400);
-  const r = await new Promise((resolve) => {
-    handler({ method: 'GET', headers: {} }, {
-      setHeader() {}, status(c) { this.c = c; return this; }, json() { resolve(this.c); },
+function callMethod(method, body) {
+  return new Promise((resolve) => {
+    handler({ method, headers: { 'x-forwarded-for': `t${Math.random()}` }, body }, {
+      setHeader() {}, status(c) { this.c = c; return this; }, json(d) { resolve({ status: this.c, body: d }); },
     });
   });
-  assert.equal(r, 405);
+}
+
+test('空白與過長輸入回 400，PUT 回 405', async () => {
+  assert.equal((await call({ text: '  ' })).status, 400);
+  assert.equal((await call({ text: '山'.repeat(501) })).status, 400);
+  assert.equal((await callMethod('PUT')).status, 405);
+});
+
+test('GET 是健康檢查：回報模型與金鑰是否設定，不外洩金鑰', async () => {
+  const r = await callMethod('GET');
+  assert.equal(r.status, 200);
+  assert.equal(r.body.ok, true);
+  assert.equal(typeof r.body.keyConfigured, 'boolean');
+  assert.ok(!JSON.stringify(r.body).includes('sk-ant'));
+});
+
+test('沒有金鑰時回明確的錯誤訊息', async (t) => {
+  const saved = process.env.ANTHROPIC_API_KEY;
+  delete process.env.ANTHROPIC_API_KEY;
+  t.after(() => { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; });
+  setClient(null);
+  const r = await call({ text: '玉山主峰' });
+  assert.equal(r.status, 500);
+  assert.match(r.body.error, /ANTHROPIC_API_KEY/);
 });
 
 test('未設定 CLAUDE_MODEL 時預設用 claude-sonnet-5-5', async () => {
