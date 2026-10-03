@@ -1,7 +1,14 @@
 {
   "name": "route-planner",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "台灣山徑路線規劃：自然語言輸入 + RAG",
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-rag-index.mjs",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

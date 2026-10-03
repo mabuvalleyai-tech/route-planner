@@ -2,6 +2,15 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採 [語意化版本](https://semver.org/lang/zh-TW/)。
 
+## [0.3.0] - 2026-10-03
+### 新增
+- RAG 知識庫：
+  - `knowledge/aliases.json`：常用地名別名（排雲、369、塔塔加、北大武…）。
+  - `knowledge/itineraries/`：11 篇行程範本（玉山、雪山、奇萊、合歡、南湖、北大武、嘉明湖、天池山莊），時間依路網實算，建置時會檢查節點名稱存在且同一區域。
+  - 登山知識文章直接從 `posts/*.html` 擷取。
+- `scripts/build-rag-index.mjs`（`npm run build`）產生 `data/rag/index.json`：717 個 chunk（節點 667、區域 19、文章段落 20、行程 11）。
+- `lib/retrieve.js`：中文字元 bigram + BM25 檢索。
+
 ## [0.2.0] - 2026-10-03
 ### 變更
 - 路網資料（667 節點、783 路段、19 區塊）從 `index.html` 拆出為 `data/trail-network.json`，頁面由 4 MB 降至約 260 KB；前後端共用同一份資料。
