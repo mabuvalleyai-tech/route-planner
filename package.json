@@ -1,0 +1,7 @@
+{
+  "name": "route-planner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "台灣山徑路線規劃：自然語言輸入 + RAG",
+  "type": "module"
+}
